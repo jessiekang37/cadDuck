@@ -12,7 +12,7 @@ def validate_message(message: Any) -> dict[str, Any]:
     """Validate a protocol message and return it as a dictionary.
 
     Supported message types are translate, scale, rotate, select, command
-    (currently ``move``), and undo. Unknown keys and invalid numeric values
+    (``move`` or ``extrude``), cursor, and undo. Unknown keys and invalid numeric values
     are rejected so malformed packets cannot reach a receiver unchecked.
     """
     if not isinstance(message, dict) or not isinstance(message.get("type"), str):
@@ -24,14 +24,20 @@ def validate_message(message: Any) -> dict[str, Any]:
         "scale": {"type", "factor"},
         "rotate": {"type", "axis", "radians"},
         "select": {"type", "name"},
-        "command": {"type", "op", "axis", "value"},
+        "command": None,
         "cursor": {"type", "u", "v"},
         "undo": {"type"},
     }
     if message_type not in schemas:
         raise ValueError(f"unsupported message type: {message_type}")
-    if set(message) != schemas[message_type]:
-        raise ValueError(f"{message_type} message fields must be {sorted(schemas[message_type])}")
+    expected_fields = schemas[message_type]
+    if message_type == "command":
+        expected_fields = {
+            "move": {"type", "op", "axis", "value"},
+            "extrude": {"type", "op", "value"},
+        }.get(message.get("op"))
+    if expected_fields is None or set(message) != expected_fields:
+        raise ValueError(f"invalid fields for {message_type} message")
 
     numeric_fields = {
         "translate": ("dx", "dy"),
@@ -53,11 +59,11 @@ def validate_message(message: Any) -> dict[str, Any]:
         not 0.0 <= message[key] <= 1.0 for key in ("u", "v")
     ):
         raise ValueError("cursor u and v must be between zero and one")
-    if message_type in {"rotate", "command"}:
+    if message_type == "rotate" or (
+        message_type == "command" and message["op"] == "move"
+    ):
         if not isinstance(message["axis"], str) or message["axis"] not in _AXES:
             raise ValueError("axis must be one of x, y, z")
-    if message_type == "command" and message["op"] != "move":
-        raise ValueError("command op must be 'move'")
     if message_type == "select" and (
         not isinstance(message["name"], str) or not message["name"].strip()
     ):

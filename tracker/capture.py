@@ -46,6 +46,17 @@ def main(argv: list[str] | None = None) -> None:
         default=(0.2, 0.2, 0.8, 0.8),
         help="calibration rectangle in normalized frame coordinates (default: 0.2 0.2 0.8 0.8)",
     )
+    parser.add_argument(
+        "--voice",
+        action="store_true",
+        help="enable push-to-talk voice commands (hold Space in the Webcam window)",
+    )
+    parser.add_argument(
+        "--stt-model",
+        choices=("tiny", "base"),
+        default="tiny",
+        help="faster-whisper model size for --voice (default: tiny)",
+    )
     args = parser.parse_args(argv)
     calibration_rect = tuple(args.calibration_rect)
     try:
@@ -70,8 +81,24 @@ def main(argv: list[str] | None = None) -> None:
     raw_trail: deque[tuple[int, int]] = deque(maxlen=60)
     filtered_trail: deque[tuple[int, int]] = deque(maxlen=60)
     controller = GestureBridgeController()
+    voice_input = None
 
     try:
+        if args.voice:
+            from voice.stt import VoiceInput
+
+            def dispatch_voice_command(command: dict) -> None:
+                if args.dry_run:
+                    print("Would send: " + json.dumps(command, separators=(",", ":")))
+                else:
+                    sender.send(command)
+
+            voice_input = VoiceInput(
+                on_command=dispatch_voice_command,
+                model_size=args.stt_model,
+            )
+            voice_input.start()
+
         with HandTracker() as tracker:
             while True:
                 success, frame = camera.read()
@@ -220,6 +247,17 @@ def main(argv: list[str] | None = None) -> None:
                     2,
                     cv2.LINE_AA,
                 )
+                if args.voice:
+                    cv2.putText(
+                        frame,
+                        "Voice: hold SPACE to record, release to parse",
+                        (10, 170),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.5,
+                        (255, 255, 255),
+                        1,
+                        cv2.LINE_AA,
+                    )
                 cv2.putText(
                     frame,
                     f"State: {state_text}  Pinch: {ratio_text}",
@@ -255,6 +293,8 @@ def main(argv: list[str] | None = None) -> None:
                 if cv2.waitKey(1) & 0xFF == ord("q"):
                     break
     finally:
+        if voice_input is not None:
+            voice_input.stop()
         camera.release()
         cv2.destroyAllWindows()
         if sender is not None:

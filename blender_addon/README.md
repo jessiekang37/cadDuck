@@ -29,6 +29,13 @@ normalized image coordinates from 0 to 1. For example:
 The filtered index fingertip maps through this rectangle to normalized viewport
 coordinates and sends cursor updates.
 
+Install the optional voice dependencies with `pip install -r requirements.txt`
+and run `python tracker/demo_capture.py --voice`. Hold Space while the Webcam
+preview is focused; release to transcribe and parse. The `tiny` model loads by
+default; use `--stt-model base` for the larger model. The first run downloads
+the selected model. Voice commands are printed and sent through the same UDP
+bridge (or printed as "Would send" messages in dry-run mode).
+
 Hold an open palm for half a second to engage, then pinch to grab. A single
 grabbed hand translates the active object in the view plane; two grabbed hands
 scale and rotate it from their pinch-point spacing and angle. Changes in the
@@ -45,6 +52,7 @@ Supported messages:
 {"type":"rotate","axis":"z","radians":0.1}
 {"type":"select","name":"Cube"}
 {"type":"command","op":"move","axis":"z","value":0.05}
+{"type":"command","op":"extrude","value":0.01}
 {"type":"cursor","u":0.4,"v":0.6}
 {"type":"undo"}
 ```
@@ -52,6 +60,7 @@ Supported messages:
 `translate` changes active-object X and Y location. `command` with `op: move`
 changes one location axis. `scale` applies a uniform multiplier, and `rotate`
 adds radians to the active object's Euler angle on the selected axis.
+`command` with `op: extrude` extrudes the active mesh along Z in edit mode.
 `cursor` draws a square in the 3D View and updates the add-on's
 `pointer_world` scene value from a ray hit or the world ground plane. Grid
 snapping is on by default at `0.01 m`; toggle it or change the spacing in the

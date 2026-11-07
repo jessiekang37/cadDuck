@@ -50,7 +50,13 @@ def _validate_message(message):
         "cursor": {"type", "u", "v"},
         "undo": {"type"},
     }
-    if kind not in fields or set(message) != fields[kind]:
+    expected_fields = fields.get(kind)
+    if kind == "command":
+        expected_fields = {
+            "move": {"type", "op", "axis", "value"},
+            "extrude": {"type", "op", "value"},
+        }.get(message.get("op"))
+    if expected_fields is None or set(message) != expected_fields:
         raise ValueError("unsupported message type or invalid message fields")
     numeric = {
         "translate": ("dx", "dy"),
@@ -69,11 +75,11 @@ def _validate_message(message):
         not 0.0 <= message[key] <= 1.0 for key in ("u", "v")
     ):
         raise ValueError("cursor u and v must be between zero and one")
-    if kind in {"rotate", "command"}:
+    if kind == "rotate" or (kind == "command" and message["op"] == "move"):
         if not isinstance(message["axis"], str) or message["axis"] not in {"x", "y", "z"}:
             raise ValueError("axis must be x, y, or z")
-    if kind == "command" and message["op"] != "move":
-        raise ValueError("only the move command is supported")
+    if kind == "command" and message["op"] not in {"move", "extrude"}:
+        raise ValueError("command op must be 'move' or 'extrude'")
     if kind == "select" and (not isinstance(message["name"], str) or not message["name"].strip()):
         raise ValueError("select name must be a non-empty string")
     return message
@@ -109,7 +115,50 @@ def _apply_message(message):
     elif kind == "rotate":
         obj.rotation_euler["xyz".index(message["axis"])] += message["radians"]
     elif kind == "command":
-        obj.location["xyz".index(message["axis"])] += message["value"]
+        if message["op"] == "move":
+            obj.location["xyz".index(message["axis"])] += message["value"]
+        elif message["op"] == "extrude":
+            _extrude_active_mesh(obj, message["value"])
+
+
+def _extrude_active_mesh(obj, distance):
+    if obj.type != "MESH":
+        raise ValueError("extrude requires an active mesh object")
+    area, region = _active_view3d_region()
+    window = bpy.context.window
+    if window is None or area is None or region is None:
+        raise ValueError("extrude requires an open 3D View")
+
+    for selected in bpy.context.selected_objects:
+        selected.select_set(False)
+    obj.select_set(True)
+    bpy.context.view_layer.objects.active = obj
+    original_mode = obj.mode
+    override = {
+        "window": window,
+        "area": area,
+        "region": region,
+        "active_object": obj,
+        "object": obj,
+        "selected_objects": [obj],
+        "selected_editable_objects": [obj],
+    }
+    with bpy.context.temp_override(**override):
+        try:
+            if original_mode != "OBJECT":
+                bpy.ops.object.mode_set(mode="OBJECT")
+            bpy.ops.object.mode_set(mode="EDIT")
+            bpy.ops.mesh.select_all(action="SELECT")
+            result = bpy.ops.mesh.extrude_region_move(
+                TRANSFORM_OT_translate={"value": (0.0, 0.0, distance)}
+            )
+            if "CANCELLED" in result:
+                raise RuntimeError("Blender cancelled the mesh extrusion")
+        finally:
+            if obj.mode != "OBJECT":
+                bpy.ops.object.mode_set(mode="OBJECT")
+            if original_mode != "OBJECT":
+                bpy.ops.object.mode_set(mode=original_mode)
 
 
 def _active_view3d_region():
