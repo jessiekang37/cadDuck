@@ -30,6 +30,7 @@ from voice.parser import parse_transcript
         ("select the coffee mug", {"type": "select", "name": "Coffee Mug"}),
         ("undo", {"type": "undo"}),
         ("undo that", {"type": "undo"}),
+        ("cancel", {"type": "cancel"}),
         ("extrude 10 millimeters", {"type": "command", "op": "extrude", "value": 0.01}),
         ("extrude by one inch", {"type": "command", "op": "extrude", "value": 0.0254}),
         ("extrude twenty two point five cm", {"type": "command", "op": "extrude", "value": 0.225}),

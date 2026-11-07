@@ -20,21 +20,28 @@ camera-free test sequence. The sender defaults to `127.0.0.1:8765` and pauses
 between actions. You can also send one JSON message with
 `python -m bridge.sender '{"type":"translate","dx":0.01,"dy":0.0}'`.
 
-Run `python tracker/demo_capture.py` to connect the webcam gesture tracker to
-the receiver. Add `--dry-run` to print the generated JSON messages without
+Run `python main.py` from the project root to connect the webcam tracker,
+voice input, and receiver. Add `--no-voice` to disable push-to-talk, or
+`--dry-run` to print generated JSON messages without
 sending UDP packets. Add `--calibrate` to draw the current camera calibration
 rectangle; adjust it with `--calibration-rect LEFT TOP RIGHT BOTTOM`, using
 normalized image coordinates from 0 to 1. For example:
-`python tracker/demo_capture.py --calibrate --calibration-rect 0.15 0.1 0.85 0.9`.
+`python main.py --calibrate --calibration-rect 0.15 0.1 0.85 0.9`.
 The filtered index fingertip maps through this rectangle to normalized viewport
 coordinates and sends cursor updates.
 
-Install the optional voice dependencies with `pip install -r requirements.txt`
-and run `python tracker/demo_capture.py --voice`. Hold Space while the Webcam
+Install the voice dependencies with `pip install -r requirements.txt`.
+Hold Space while the Webcam
 preview is focused; release to transcribe and parse. The `tiny` model loads by
 default; use `--stt-model base` for the larger model. The first run downloads
 the selected model. Voice commands are printed and sent through the same UDP
-bridge (or printed as "Would send" messages in dry-run mode).
+bridge (or printed to the terminal in dry-run mode).
+
+Each meaningful gesture, voice, cursor, and bridge event is appended with an
+ISO timestamp to `gesturecad_events.jsonl`. Use `--log-file PATH` to choose a
+different JSONL destination. Voice commands appear in the HUD for 1.5 seconds
+before sending; say "cancel" to discard the pending command. `--no-confirm`
+sends parsed voice commands immediately.
 
 Hold an open palm for half a second to engage, then pinch to grab. A single
 grabbed hand translates the active object in the view plane; two grabbed hands

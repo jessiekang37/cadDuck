@@ -236,7 +236,7 @@ def _parse_extrude(tokens: list[str]) -> dict | None:
 
 
 def parse_transcript(transcript: str) -> dict | None:
-    """Return a validated protocol message, or ``None`` if unrecognized.
+    """Return a protocol message (or local cancel control), else ``None``.
 
     Linear values are converted to meters (unspecified units are meters).
     ``rotate`` defaults to the Z axis
@@ -251,6 +251,9 @@ def parse_transcript(transcript: str) -> dict | None:
 
     if tokens in (["undo"], ["undo", "that"], ["undo", "it"]):
         return {"type": "undo"}
+    if tokens in (["cancel"], ["cancel", "that"], ["cancel", "command"]):
+        # This is a local confirmation control, not a bridge operation.
+        return {"type": "cancel"}
     if tokens[0] == "select":
         name_tokens = [token for token in tokens[1:] if token not in _FILLERS]
         if not name_tokens:
