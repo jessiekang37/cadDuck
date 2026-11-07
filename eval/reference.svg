@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="520" viewBox="0 0 960 520">
+  <rect width="960" height="520" rx="20" fill="#f6f7fb"/>
+  <text x="480" y="52" text-anchor="middle" font-family="sans-serif" font-size="28" font-weight="700" fill="#1d2433">TASK 3 - MATCH THE THREE OBJECTS</text>
+  <text x="480" y="82" text-anchor="middle" font-family="sans-serif" font-size="15" fill="#596274">Top view reference • align centers from left to right</text>
+  <rect x="54" y="112" width="852" height="300" rx="12" fill="#ffffff" stroke="#cbd1dc" stroke-width="2"/>
+  <path d="M480 130 V394 M80 262 H880" stroke="#e6e9ef" stroke-width="2" stroke-dasharray="6 7"/>
+
+  <g transform="translate(240 262) rotate(45)">
+    <rect x="-63" y="-38" width="126" height="76" rx="5" fill="#3478db" stroke="#153d78" stroke-width="5"/>
+    <path d="M-50 -23 H50 M-50 0 H50 M-50 23 H50" stroke="#8bb8f3" stroke-width="3" opacity="0.75"/>
+  </g>
+  <circle cx="480" cy="262" r="50" fill="#46b579" stroke="#176943" stroke-width="5"/>
+  <circle cx="462" cy="244" r="11" fill="#b4edcb" opacity="0.8"/>
+  <g transform="translate(720 262) rotate(90)">
+    <path d="M0 -61 L55 43 H-55 Z" fill="#edaa32" stroke="#89590a" stroke-width="5"/>
+    <path d="M0 -43 V30" stroke="#ffe0a1" stroke-width="4"/>
+  </g>
+
+  <text x="240" y="452" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="700" fill="#263247">Eval_Cube_B</text>
+  <text x="240" y="478" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#596274">center (-2, 4, 0.5) • Z 45°</text>
+  <text x="480" y="452" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="700" fill="#263247">Eval_Sphere</text>
+  <text x="480" y="478" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#596274">center (0, 4, 0.5) • scale 0.75</text>
+  <text x="720" y="452" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="700" fill="#263247">Eval_Cone</text>
+  <text x="720" y="478" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#596274">center (2, 4, 0.5) • Z 90° • Z scale 1.5</text>
+</svg>
