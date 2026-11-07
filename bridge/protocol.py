@@ -25,6 +25,7 @@ def validate_message(message: Any) -> dict[str, Any]:
         "rotate": {"type", "axis", "radians"},
         "select": {"type", "name"},
         "command": {"type", "op", "axis", "value"},
+        "cursor": {"type", "u", "v"},
         "undo": {"type"},
     }
     if message_type not in schemas:
@@ -37,6 +38,7 @@ def validate_message(message: Any) -> dict[str, Any]:
         "scale": ("factor",),
         "rotate": ("radians",),
         "command": ("value",),
+        "cursor": ("u", "v"),
     }.get(message_type, ())
     for key in numeric_fields:
         value = message[key]
@@ -47,6 +49,10 @@ def validate_message(message: Any) -> dict[str, Any]:
 
     if message_type == "scale" and message["factor"] <= 0:
         raise ValueError("scale factor must be greater than zero")
+    if message_type == "cursor" and any(
+        not 0.0 <= message[key] <= 1.0 for key in ("u", "v")
+    ):
+        raise ValueError("cursor u and v must be between zero and one")
     if message_type in {"rotate", "command"}:
         if not isinstance(message["axis"], str) or message["axis"] not in _AXES:
             raise ValueError("axis must be one of x, y, z")

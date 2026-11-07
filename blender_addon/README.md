@@ -1,6 +1,6 @@
 # GestureCAD Blender receiver
 
-The add-on listens on `127.0.0.1:8765` using a non-blocking UDP socket. Blender
+The add-on targets Blender 4.x and listens on `127.0.0.1:8765` using a non-blocking UDP socket. Blender
 application timers receive, queue, and apply messages on Blender's main thread.
 Enabling the add-on starts the listener. In the 3D View sidebar, open the
 **GestureCAD** tab to check the listener or stop/start it.
@@ -20,6 +20,23 @@ camera-free test sequence. The sender defaults to `127.0.0.1:8765` and pauses
 between actions. You can also send one JSON message with
 `python -m bridge.sender '{"type":"translate","dx":0.01,"dy":0.0}'`.
 
+Run `python tracker/demo_capture.py` to connect the webcam gesture tracker to
+the receiver. Add `--dry-run` to print the generated JSON messages without
+sending UDP packets. Add `--calibrate` to draw the current camera calibration
+rectangle; adjust it with `--calibration-rect LEFT TOP RIGHT BOTTOM`, using
+normalized image coordinates from 0 to 1. For example:
+`python tracker/demo_capture.py --calibrate --calibration-rect 0.15 0.1 0.85 0.9`.
+The filtered index fingertip maps through this rectangle to normalized viewport
+coordinates and sends cursor updates.
+
+Hold an open palm for half a second to engage, then pinch to grab. A single
+grabbed hand translates the active object in the view plane; two grabbed hands
+scale and rotate it from their pinch-point spacing and angle. Changes in the
+number or identity of grabbed hands re-clutch for one frame before motion
+resumes. Translation sensitivity is `2.0` Blender units per normalized frame
+unit, set in
+`tracker/bridge_control.py`.
+
 Supported messages:
 
 ```json
@@ -28,9 +45,14 @@ Supported messages:
 {"type":"rotate","axis":"z","radians":0.1}
 {"type":"select","name":"Cube"}
 {"type":"command","op":"move","axis":"z","value":0.05}
+{"type":"cursor","u":0.4,"v":0.6}
 {"type":"undo"}
 ```
 
 `translate` changes active-object X and Y location. `command` with `op: move`
 changes one location axis. `scale` applies a uniform multiplier, and `rotate`
 adds radians to the active object's Euler angle on the selected axis.
+`cursor` draws a square in the 3D View and updates the add-on's
+`pointer_world` scene value from a ray hit or the world ground plane. Grid
+snapping is on by default at `0.01 m`; toggle it or change the spacing in the
+GestureCAD sidebar.
