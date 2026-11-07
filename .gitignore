@@ -1,0 +1,5 @@
+.venv/
+__pycache__/
+*.pyc
+gesturecad_events.jsonl
+tracker/hand_landmarker.task

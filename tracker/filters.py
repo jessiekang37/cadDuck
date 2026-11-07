@@ -49,7 +49,10 @@ class OneEuroFilter:
 
         elapsed = timestamp - self._timestamp
         if elapsed <= 0:
-            raise ValueError("timestamps must increase for each filter sample")
+            # Clock samples can repeat at the platform's timer resolution.
+            # Ignore stale samples without advancing any filter state.
+            assert self._value is not None
+            return self._value
 
         previous_value = self._value
         assert previous_value is not None
